@@ -9,12 +9,12 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
-// app.use('/api/users', userRoutes); // temporarily removed
+app.use('/api/users', userRoutes); // temporarily removed
 app.use('/api/products', productRoutes);
 const PORT = process.env.PORT || 5000;
 
-// sequelize.sync() // temporarily removed
-//  .then(() => { // temporarily removed
+sequelize.sync() // temporarily removed
+ .then(() => { // temporarily removed
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-//  }) // temporarily removed
-//  .catch(err => console.log(err)); // temporarily removed
+ }) // temporarily removed
+ .catch(err => console.log(err)); // temporarily removed

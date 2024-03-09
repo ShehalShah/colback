@@ -5,10 +5,56 @@ const { formidable, errors } = require('formidable');
 const fs = require('fs');
 const { getJson } = require("serpapi");
 const puppeteer = require('puppeteer');
+const User = require('../models/userModel');
 
 const router = express.Router();
 
 const IMGBB_API_KEY = 'af18f34deea279501ed6b09a0b78ce43';
+
+
+router.post('/add-to-watchlist', async (req, res) => {
+    const { userId, product } = req.body;
+
+    if (!userId || !product) {
+        return res.status(400).json({ error: 'User ID and product object are required' });
+    }
+
+    try {
+        // Find the user by ID
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Check if the user already has a watchlist
+        let watchlist = user.watchlist || [];
+        console.log(watchlist);
+
+        // Check if the product already exists in the watchlist
+        const existingProductIndex = watchlist.findIndex(item => item.title === product.title);
+
+        if (existingProductIndex !== -1) {
+            // If the product already exists, update its details
+            watchlist[existingProductIndex] = product;
+        } else {
+            // If the product does not exist, add it to the watchlist
+            watchlist.push(product);
+        }
+
+        console.log(watchlist);
+
+        // Update the user's watchlist
+        // await user.set({ watchlist });
+        user.watchlist = watchlist;
+        await user.save();
+
+        res.json({ message: 'Product added to watchlist successfully', watchlist });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while adding product to watchlist' });
+    }
+});
 
 router.post('/upload-image', async (req, res) => {
     const form = formidable({});
