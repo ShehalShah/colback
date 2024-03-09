@@ -46,8 +46,13 @@ router.post('/add-to-watchlist', async (req, res) => {
 
         // Update the user's watchlist
         // await user.set({ watchlist });
-        user.watchlist = watchlist;
-        await user.save();
+        // user.watchlist = watchlist;
+        // await user.save();
+        await User.update({ watchlist: watchlist }, {
+            where: {
+               id: userId, // Assuming userId is the primary key of the user
+            },
+           });
 
         res.json({ message: 'Product added to watchlist successfully', watchlist });
     } catch (error) {
