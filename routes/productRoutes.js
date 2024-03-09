@@ -11,7 +11,7 @@ const router = express.Router();
 
 const IMGBB_API_KEY = 'af18f34deea279501ed6b09a0b78ce43';
 
-router.get('/watchlist', async (req, res) => {
+router.post('/watchlist', async (req, res) => {
     const { userId } = req.body;
 
     if (!userId) {
