@@ -241,16 +241,16 @@ router.post('/search', async (req, res) => {
 
     try {
         // Scrape from AliExpress
-        const aliExpressUrl = `https://aliexpress.com/w/wholesale-${encodeURIComponent(query)}.html?spm=a2g0o.home.search.0`;
-        const aliExpressResponse = await axios.get(aliExpressUrl, {
-            responseType: "arraybuffer",
-            headers: {
-                "Content-Type": "text/html; charset=UTF-8"
-            }
-        });
+        // const aliExpressUrl = `https://aliexpress.com/w/wholesale-${encodeURIComponent(query)}.html?spm=a2g0o.home.search.0`;
+        // const aliExpressResponse = await axios.get(aliExpressUrl, {
+        //     responseType: "arraybuffer",
+        //     headers: {
+        //         "Content-Type": "text/html; charset=UTF-8"
+        //     }
+        // });
 
-        const aliExpressProducts = scrapeAliExpress(aliExpressResponse.data);
-        // const aliExpressProducts = [];
+        // const aliExpressProducts = scrapeAliExpress(aliExpressResponse.data);
+        const aliExpressProducts = [];
 
         // Scrape from Flipkart
         const flipkartUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
