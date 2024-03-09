@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const { formidable, errors } = require('formidable');
 const fs = require('fs');
 const { getJson } = require("serpapi");
+const puppeteer = require('puppeteer');
 
 const router = express.Router();
 
@@ -194,16 +195,16 @@ router.post('/search', async (req, res) => {
 
  try {
     // Scrape from AliExpress
-    // const aliExpressUrl = `https://aliexpress.com/w/wholesale-${encodeURIComponent(query)}.html?spm=a2g0o.home.search.0`;
-    // const aliExpressResponse = await axios.get(aliExpressUrl, {
-    //     responseType: "arraybuffer",
-    //     headers: {
-    //         "Content-Type": "text/html; charset=UTF-8"
-    //     }
-    // });
+    const aliExpressUrl = `https://aliexpress.com/w/wholesale-${encodeURIComponent(query)}.html?spm=a2g0o.home.search.0`;
+    const aliExpressResponse = await axios.get(aliExpressUrl, {
+        responseType: "arraybuffer",
+        headers: {
+            "Content-Type": "text/html; charset=UTF-8"
+        }
+    });
 
-    // const aliExpressProducts = scrapeAliExpress(aliExpressResponse.data);
-    const aliExpressProducts = [];
+    const aliExpressProducts = scrapeAliExpress(aliExpressResponse.data);
+    // const aliExpressProducts = [];
 
     // Scrape from Flipkart
     const flipkartUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
@@ -216,9 +217,52 @@ router.post('/search', async (req, res) => {
     
 
     const flipkartProducts = scrapeFlipkart(flipkartResponse.data);
+    const smartprixProducts = []
+    // const smartprixUrl = `https://www.smartprix.com/products/?q=${encodeURIComponent(query)}`;
+    // const smartprixResponse = await axios.get(smartprixUrl, {
+    //     responseType: "arraybuffer",
+    //     headers: {
+    //         "Content-Type": "text/html; charset=UTF-8"
+    //     }
+    // });
+    // const smartprixProducts = scrapeSmartprix(smartprixResponse.data);
+
+    // const browser = await puppeteer.launch();
+    //     const page = await browser.newPage();
+
+    //     // Navigate to Smartprix search results page
+    //     const smartprixUrl = `https://www.smartprix.com/products/?q=${encodeURIComponent(query)}`;
+    //     await page.goto(smartprixUrl);
+
+    //     // Wait for product data to load
+    //     await page.waitForSelector('.sm-product.has-tag.has-features.has-actions');
+
+    //     // Scrape product data
+    //     const smartprixProducts = await page.evaluate(() => {
+    //         const products = [];
+    //         const productElements = document.querySelectorAll('.sm-product.has-tag.has-features.has-actions');
+
+    //         productElements.forEach(element => {
+    //             const name = element.querySelector('h2')?.innerText?.trim();
+    //             const price = element.querySelector('span.price')?.innerText?.trim();
+    //             const ratingStyle = element.querySelector('span.sm-rating')?.getAttribute('style');
+    //             const ratingMatch = /--rating: ([\d.]+);/.exec(ratingStyle);
+    //             const rating = ratingMatch ? parseFloat(ratingMatch[1]) : null;
+    //             products.push({ name, price, rating, from: "smartprix" });
+    //         });
+
+    //         return products;
+    //     });
+
+    //     // Close Puppeteer browser
+    //     await browser.close();
 
     // Send both sets of scraped data in response
-    res.json({ aliExpressProducts, flipkartProducts });
+    // res.json({ aliExpressProducts, flipkartProducts,smartprixProducts });
+    const combinedProducts = [...aliExpressProducts, ...flipkartProducts, ...smartprixProducts];
+
+        // Send combined products in response
+        res.json({ combinedProducts });
  } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'An error occurred while fetching data' });
@@ -234,6 +278,20 @@ router.post('/search', async (req, res) => {
 //     });
 //     return products;
 // }
+
+function scrapeSmartprix(html) {
+    const $ = cheerio.load(html);
+    const products = [];
+
+    $('.sm-product has-tag has-features has-actions').each((index, element) => {
+        const name = $(element).find('h2').text().trim();
+        const price = $(element).find('span.price').text().trim();
+        const rating = $(element).find('div.score.rank-2-bg b').text().trim();
+        products.push({ name, price, rating });
+    });
+
+    return products;
+}
 
 function scrapeAliExpress(data) {
     const $ = cheerio.load(data);
@@ -259,14 +317,16 @@ function scrapeFlipkart(data) {
     $('._1AtVbE').each((index, element) => {
         const titleElement1 = $(element).find('a.s1Q9rs');
         const titleElement2 = $(element).find('div._4rR01T');
+        console.log(titleElement1);
 
         // const title = titleElement.attr('title') || 'No title found';
-        const title = titleElement2.text() || 'No title found' || titleElement1.attr('title');
+        const title = titleElement2.text() || 'No title found' || titleElement1.attr('title') || titleElement1.text();
 
         const urlElement = $(element).find('a');
         const url = `https://www.flipkart.com${urlElement.attr('href') || ''}`;
 
         const priceElement = $(element).find('._30jeq3');
+        console.log(priceElement);
         const price = priceElement.text().trim() || 'No price found';
 
         const imageElement = $(element).find('img._396cs4');
