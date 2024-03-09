@@ -257,8 +257,7 @@ router.post('/search', async (req, res) => {
         const flipkartResponse = await axios.get(flipkartUrl, {
             responseType: "arraybuffer",
             headers: {
-                "User-Agent": "axios/1.6.7",
-                "Accept-Encoding": "gzip, compress, deflate, br"
+                "Content-Type": "text/html; charset=UTF-8"
             }
         });
 
