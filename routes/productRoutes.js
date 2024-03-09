@@ -55,6 +55,52 @@ router.post('/upload-image', async (req, res) => {
     }
 });
 
+router.post('/upload-imageonlytit', async (req, res) => {
+    const form = formidable({});
+    let fields;
+    let files;
+    try {
+        [fields, files] = await form.parse(req);
+
+        //  if empty files
+        if (Object.keys(files).length === 0) {
+            throw new Error('No files were uploaded.');
+        }
+
+        const image = files.image[0];
+        // Read the file data
+        const fileData = fs.readFileSync(image.filepath);
+
+        // Convert file data to a base64 encoded string
+        const base64Image = new Buffer.from(fileData).toString('base64');
+
+        // Prepare the payload to imgBB
+        const formData = new URLSearchParams();
+        formData.append('image', base64Image);
+
+        // Send the request to imgBB
+        const imgBBResponse = await axios.post(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, formData, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+        const imageUrl = imgBBResponse.data.data.url;
+        const response = await getJson({
+            engine: "google_lens",
+            api_key: "477d8b2b215ed9fdbc68f8248f1c504437148da92dd93bc1f37e0a21afe0592d", // From https://serpapi.com/manage-api-key
+            url: imageUrl,
+            location: "Austin, Texas",
+        });
+
+        // Send the response from imgBB
+        res.status(200).json(response["visual_matches"][0]["title"]);
+    } catch (err) {
+        // Handle errors
+        console.error(err);
+        res.status(err.httpCode || 400).json({ error: err.message });
+    }
+});
+
 router.post('/singleproduct', async (req, res) => {
     const url = req.body.url;
     if (!url) {
