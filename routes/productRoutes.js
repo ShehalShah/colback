@@ -315,6 +315,85 @@ router.post('/search', async (req, res) => {
     }
 });
 
+router.get('/search', async (req, res) => {
+    // const query = req.body.query;
+    // if (!query) {
+    //     return res.status(400).json({ error: 'Query parameter is required' });
+    // }
+
+    const query = "laptop"
+
+    try {
+        // Scrape from AliExpress
+        // const aliExpressUrl = `https://aliexpress.com/w/wholesale-${encodeURIComponent(query)}.html?spm=a2g0o.home.search.0`;
+        // const aliExpressResponse = await axios.get(aliExpressUrl, {
+        //     responseType: "arraybuffer",
+        //     headers: {
+        //         "Content-Type": "text/html; charset=UTF-8"
+        //     }
+        // });
+
+        // const aliExpressProducts = scrapeAliExpress(aliExpressResponse.data);
+        const aliExpressProducts = [];
+
+        // Scrape from Flipkart
+        const flipkartUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
+        const flipkartResponse = await axios.get(flipkartUrl)
+
+
+        const flipkartProducts = scrapeFlipkart(flipkartResponse.data);
+        const smartprixProducts = []
+        // const smartprixUrl = `https://www.smartprix.com/products/?q=${encodeURIComponent(query)}`;
+        // const smartprixResponse = await axios.get(smartprixUrl, {
+        //     responseType: "arraybuffer",
+        //     headers: {
+        //         "Content-Type": "text/html; charset=UTF-8"
+        //     }
+        // });
+        // const smartprixProducts = scrapeSmartprix(smartprixResponse.data);
+
+        // const browser = await puppeteer.launch();
+        //     const page = await browser.newPage();
+
+        //     // Navigate to Smartprix search results page
+        //     const smartprixUrl = `https://www.smartprix.com/products/?q=${encodeURIComponent(query)}`;
+        //     await page.goto(smartprixUrl);
+
+        //     // Wait for product data to load
+        //     await page.waitForSelector('.sm-product.has-tag.has-features.has-actions');
+
+        //     // Scrape product data
+        //     const smartprixProducts = await page.evaluate(() => {
+        //         const products = [];
+        //         const productElements = document.querySelectorAll('.sm-product.has-tag.has-features.has-actions');
+
+        //         productElements.forEach(element => {
+        //             const name = element.querySelector('h2')?.innerText?.trim();
+        //             const price = element.querySelector('span.price')?.innerText?.trim();
+        //             const ratingStyle = element.querySelector('span.sm-rating')?.getAttribute('style');
+        //             const ratingMatch = /--rating: ([\d.]+);/.exec(ratingStyle);
+        //             const rating = ratingMatch ? parseFloat(ratingMatch[1]) : null;
+        //             products.push({ name, price, rating, from: "smartprix" });
+        //         });
+
+        //         return products;
+        //     });
+
+        //     // Close Puppeteer browser
+        //     await browser.close();
+
+        // Send both sets of scraped data in response
+        // res.json({ aliExpressProducts, flipkartProducts,smartprixProducts });
+        const combinedProducts = [...aliExpressProducts, ...flipkartProducts, ...smartprixProducts];
+
+        // Send combined products in response
+        res.json({ combinedProducts });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while fetching data', details: error });
+    }
+});
+
 // function scrapeAliExpress(data) {
 //     const $ = cheerio.load(data);
 //     const products = [];
